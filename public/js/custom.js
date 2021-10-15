@@ -244,11 +244,23 @@ jQuery(function ($) {
 	}); // end document ready
 
 
-	//----------------------------------- Window load function -----------------------------------//
+	//----------------------------------- Funciones particulares -----------------------------------//
 
+	//Direccion web del proyecto (para la API)
 	let url = 'http://localhost:3000/';
 
-	function datos(d) {
+	//Funcion que me devuelve la edad en meses o en años dependiendo de la cantidad de meses
+	function textoEdad(meses) {
+		if(meses >= 12) {
+			var anios = Math.round(meses * 10 / 12) / 10;
+			return anios + " año" + (anios == 1? "": "s");
+		}
+		return meses + " mes" + (meses == 1? "": "es");
+	}
+
+	//Funcion que permite cargar los datos de las mascotas desde la API implementada para ser
+	//mostrados como HTML en forma de fichas/tarjetas en la página "buscar_mascotas.html"
+	function cargarDatos(d) {
 		//console.log(d);
 		let htmlTotal = "";
 		for (ind in d) {
@@ -262,7 +274,7 @@ jQuery(function ($) {
 								<ul class="list-unstyled">
 									<li><i class="fa fa-venus-mars fa-lg"></i> - `+ d[ind].genero + `</li>
 									<li><i class="fa fa-balance-scale fa-lg"></i> - `+ d[ind].tamano + `</li>
-									<li><i class="fa fa-calendar fa-lg"></i> - `+ d[ind].edad + ` meses</li>
+									<li><i class="fa fa-calendar fa-lg"></i> - `+ textoEdad(d[ind].edad) + `</li>
 								</ul>
 								<div class="text-center">
 									<a href="ficha-mascotas.html" class="btn btn-primary">Ver ficha</a>
@@ -272,35 +284,52 @@ jQuery(function ($) {
                     </div>
                 </div>`
 		}
+		$("#contenedor").hide();
 		document.getElementById("contenedor").innerHTML = htmlTotal;
+		//Efecto fade in para el contenedor de las fichas de las mascotas
+		$("#contenedor").fadeIn(1200, "swing");
 	}
+
+	//----------------------------------- Window load function -----------------------------------//
 
 	$(window).load(function () {
 
 		// Page Preloader 	
-
 		$("#preloader").fadeOut("slow");
 
+		//Llamado a Ajax para el cargue y mostrado de datos de todas las mascotas
+		//tan pronto se cargue la web de "buscar_mascotas.html"
 		$.ajax(
 			url + "api/mascota", {
 			method: 'GET',
 		}
-		).done(datos);
+		).done(cargarDatos);
 
+		//Cuando se da click sobre alguno de los botones de filtrado:
 		$('.option').on('click', function () {
+			//Efecto visual para la activación de botones y cierre de los desplegables
 			$('.option').removeClass('active');
 			$(this).addClass('active');
 			$('.dropdown-menu').removeClass('show');
 
+			//Variable que guarda el texto correspondienta a la opción de filtrado elegida
 			var selector = $(this).text();
 			//console.log(selector);
+			
+			//Vuelve a realizar el cargue de los datos desde la API mediante Ajax
 			$.ajax(
 				url + "api/mascota", {
 				method: 'GET',
 			}
 			).done(function (d) {
+				//Pero para el caso, solo de los datos correspondientes al filtro
+				//guardado en la variable selector
+
+				//Array auxiliar que permite guardar solo los datos filtrados
 				let aux = [];
 
+				//Se recorren todos los datos, pero solo se almacenan los que
+				//coincidan con el filtro elegido en el array aux
 				for (ind in d) {
 					let edad = parseInt(d[ind].edad);
 					switch (selector) {
@@ -329,7 +358,8 @@ jQuery(function ($) {
 							aux.push(d[ind]);
 					}
 				}
-				datos(aux);
+				//Y se realiza el cargue y mostrado de los datos filtrados en el html
+				cargarDatos(aux);
 			});
 		});
 
