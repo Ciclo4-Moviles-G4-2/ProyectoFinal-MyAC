@@ -247,7 +247,7 @@ jQuery(function ($) {
 	//----------------------------------- Funciones particulares -----------------------------------//
 
 	//Direccion web del proyecto (para la API)
-	let url = 'http://localhost:3000/';
+	let url = 'https://myac.herokuapp.com/';
 
 	//Funcion que me devuelve la edad en meses o en años dependiendo de la cantidad de meses
 	function textoEdad(meses) {

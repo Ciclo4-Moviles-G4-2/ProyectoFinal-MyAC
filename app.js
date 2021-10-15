@@ -35,7 +35,7 @@ app.use('/api', require('./routes/mascota'));
 // app.use(express.static(path.join(__dirname, 'public')));
 
 //Puerto
-app.set('puerto', process.env.PORT || 3000);
+app.set('puerto', process.env.PORT || 3001);
 
 app.listen(app.get('puerto'), function () {
     console.log('Servidor escuchando por el puerto ' + app.get('puerto'));
