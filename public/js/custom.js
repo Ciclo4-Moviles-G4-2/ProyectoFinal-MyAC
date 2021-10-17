@@ -1,8 +1,9 @@
 /*
 Template Name: Woof!
 Author: Ingrid Kuhn
+Modified by: Mao Moreno
 Author URI: themeforest/user/ingridk
-Version: 1.0
+Version: 1.1
 */
 jQuery(function ($) {
 
@@ -251,11 +252,11 @@ jQuery(function ($) {
 
 	//Funcion que me devuelve la edad en meses o en años dependiendo de la cantidad de meses
 	function textoEdad(meses) {
-		if(meses >= 12) {
+		if (meses >= 12) {
 			var anios = Math.round(meses * 10 / 12) / 10;
-			return anios + " año" + (anios == 1? "": "s");
+			return anios + " año" + (anios == 1 ? "" : "s");
 		}
-		return meses + " mes" + (meses == 1? "": "es");
+		return meses + " mes" + (meses == 1 ? "" : "es");
 	}
 
 	//Funcion que permite cargar los datos de las mascotas desde la API implementada para ser
@@ -277,7 +278,7 @@ jQuery(function ($) {
 									<li><i class="fa fa-calendar fa-lg"></i> - `+ textoEdad(d[ind].edad) + `</li>
 								</ul>
 								<div class="text-center">
-									<a href="ficha-mascotas.html" class="btn btn-primary">Ver ficha</a>
+									<a href="ficha-mascotas.html?id=` + d[ind]._id + `" class="btn btn-primary">Ver ficha</a>
 								</div>
 							</div>
                         </div>
@@ -290,6 +291,65 @@ jQuery(function ($) {
 		$("#contenedor").fadeIn(1200, "swing");
 	}
 
+	//Funcion que permite cargar los datos de una mascota de acuerdo a su id desde la API 
+	//implementada para ser mostrados como HTML en la página "ficha-mascotas.html"
+	function cargarFicha(d) {
+		console.log(d);
+		vocalGenero = (d.genero == "Macho" ? "o" : "a");
+		document.getElementById("contenedor_ficha").innerHTML =
+			`<div class="container">
+				<div class="row">
+					<div class="col-lg-12">
+						<div class="row bg-light-custom border-irregular1 block-padding m-3">
+							<div class="col-lg-4 offset-lg-2">
+								<div class="col-md-12">
+									<a href="` + d.ruta_img + `" title="` + d.nombre + `">
+										<img src="` + d.ruta_img + `" class="border-irregular1 img-fluid hover-opacity" alt="">
+									</a>
+								</div>
+							</div>
+							<div class="col-lg-6 res-margin mt-6 text-xs-center">
+								<h3 class="text-center">`+ d.nombre + `</h3>
+								<div class="row">
+									<div class="col-lg-6">
+										<ul class="list-unstyled pet-adopt-info">
+											<ul class="custom list-inline font-weight-bold">
+												<li class="h7">Tipo: <span> `+ d.tipo + ` </span></li>
+												<li class="h7">Género: <span>`+ d.genero + ` </span></li>
+												<li class="h7">Tamaño: <span>`+ d.tamano + ` </span></li>
+												<li class="h7">Edad: <span> `+ textoEdad(d.edad) + `</span></li>
+											</ul>
+										</ul>
+									</div>
+								</div>
+								<ul class="list-unstyled pet-adopt-info">
+									<ul class="custom list-inline font-weight-bold">
+										<li class="h7">Descripción: <span> `+ d.descripcion + `</span></li>
+										<li class="h7">¿En adopción?: <span> `+ (d.en_adopcion ? "Sí" : "No") + `</span></li>
+									</ul>
+								</ul>
+								<a href="form_adoption.html" class="btn btn-primary" data-aos="zoom-in">Adóptame</a>
+							</div>
+						</div>
+						<div class="col-md-12 mt-5">
+							<h3 class="text-center">¿Quién es `+ d.nombre + `?</h3>
+							<div class="alert alert-primary border-irregular2 p-5 mt-5" role="alert">
+								<h6 class="text-light">`+ d.nombre + ` es un` + (vocalGenero == "o" ? "" : "a") + (d.tipo == "Perro" ? " perrit" : " gatic")
+								+ vocalGenero + ` rescatad` + vocalGenero + ` de las frias calles de Bogotá, luego de ser
+								abandonad`+ vocalGenero + ` por aquellos a quienes creía su familia.<br><br>
+								`+ d.nombre + ` llego a nuestras instalaciones con desnutrición, problemas de piel y un corazón
+								roto.<br><br>
+								My Adopcion Center se encargó de curarl`+ vocalGenero + ` y darle mucho amor, 
+								y ahora esta list`+ vocalGenero + ` para ser parte de tu familia.
+								` + d.nombre + ` es muy tiern` + vocalGenero + ` y una gran compañía.
+								</h6>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>`
+	}
+
 	//----------------------------------- Window load function -----------------------------------//
 
 	$(window).load(function () {
@@ -297,72 +357,85 @@ jQuery(function ($) {
 		// Page Preloader 	
 		$("#preloader").fadeOut("slow");
 
-		//Llamado a Ajax para el cargue y mostrado de datos de todas las mascotas
-		//tan pronto se cargue la web de "buscar_mascotas.html"
-		$.ajax(
-			url + "api/mascota", {
-			method: 'GET',
-		}
-		).done(cargarDatos);
+		var pathname = window.location.pathname;
 
-		//Cuando se da click sobre alguno de los botones de filtrado:
-		$('.option').on('click', function () {
-			//Efecto visual para la activación de botones y cierre de los desplegables
-			$('.option').removeClass('active');
-			$(this).addClass('active');
-			$('.dropdown-menu').removeClass('show');
-
-			//Variable que guarda el texto correspondienta a la opción de filtrado elegida
-			var selector = $(this).text();
-			//console.log(selector);
-			
-			//Vuelve a realizar el cargue de los datos desde la API mediante Ajax
+		if (pathname == "/buscar_mascota.html") {
+			//Llamado a Ajax para el cargue y mostrado de datos de todas las mascotas
+			//tan pronto se cargue la web de "buscar_mascotas.html"
 			$.ajax(
 				url + "api/mascota", {
 				method: 'GET',
 			}
-			).done(function (d) {
-				//Pero para el caso, solo de los datos correspondientes al filtro
-				//guardado en la variable selector
+			).done(cargarDatos);
 
-				//Array auxiliar que permite guardar solo los datos filtrados
-				let aux = [];
+			//Cuando se da click sobre alguno de los botones de filtrado:
+			$('.option').on('click', function () {
+				//Efecto visual para la activación de botones y cierre de los desplegables
+				$('.option').removeClass('active');
+				$(this).addClass('active');
+				$('.dropdown-menu').removeClass('show');
 
-				//Se recorren todos los datos, pero solo se almacenan los que
-				//coincidan con el filtro elegido en el array aux
-				for (ind in d) {
-					let edad = parseInt(d[ind].edad);
-					switch (selector) {
-						case d[ind].tipo:
-							aux.push(d[ind]);
-							break;
-						case d[ind].genero:
-							aux.push(d[ind]);
-							break;
-						case d[ind].tamano:
-							aux.push(d[ind]);
-							break;
-						case "Cachorro":
-							if (edad >= 0 && edad < 12)
-								aux.push(d[ind]);
-							break;
-						case "Joven":
-							if (edad >= 12 && edad < 36)
-								aux.push(d[ind]);
-							break;
-						case "Adulto":
-							if (edad >= 36)
-								aux.push(d[ind]);
-							break;
-						case "Todos":
-							aux.push(d[ind]);
-					}
+				//Variable que guarda el texto correspondienta a la opción de filtrado elegida
+				var selector = $(this).text();
+				//console.log(selector);
+
+				//Vuelve a realizar el cargue de los datos desde la API mediante Ajax
+				$.ajax(
+					url + "api/mascota", {
+					method: 'GET',
 				}
-				//Y se realiza el cargue y mostrado de los datos filtrados en el html
-				cargarDatos(aux);
-			});
-		});
+				).done(function (d) {
+					//Pero para el caso, solo de los datos correspondientes al filtro
+					//guardado en la variable selector
 
+					//Array auxiliar que permite guardar solo los datos filtrados
+					let aux = [];
+
+					//Se recorren todos los datos, pero solo se almacenan los que
+					//coincidan con el filtro elegido en el array aux
+					for (ind in d) {
+						let edad = parseInt(d[ind].edad);
+						switch (selector) {
+							case d[ind].tipo:
+								aux.push(d[ind]);
+								break;
+							case d[ind].genero:
+								aux.push(d[ind]);
+								break;
+							case d[ind].tamano:
+								aux.push(d[ind]);
+								break;
+							case "Cachorro":
+								if (edad >= 0 && edad < 12)
+									aux.push(d[ind]);
+								break;
+							case "Joven":
+								if (edad >= 12 && edad < 36)
+									aux.push(d[ind]);
+								break;
+							case "Adulto":
+								if (edad >= 36)
+									aux.push(d[ind]);
+								break;
+							case "Todos":
+								aux.push(d[ind]);
+						}
+					}
+					//Y se realiza el cargue y mostrado de los datos filtrados en el html
+					cargarDatos(aux);
+				});
+			});
+		}
+		else if (pathname == "/ficha-mascotas.html") {
+			let URLsearch = window.location.search;
+			//Llamado a Ajax para el cargue y mostrado de ficha de la mascota seleccionada
+			//tan pronto se cargue la web de "ficha_mascotas.html"
+			$.ajax(
+				url + "api/mascota/" + URLsearch.split("=")[1], {
+				method: 'GET',
+			}
+			).done(cargarFicha);
+		}
 	}); // end window load function
 
 }); // end jquery function
